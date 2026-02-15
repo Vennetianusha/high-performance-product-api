@@ -65,29 +65,7 @@ This ensures **data consistency** and **high performance**.
 
 ---
 
-## 📂 Project Structure
 
-my-product-api/
-│
-├── src/
-│ ├── api/
-│ ├── services/
-│ ├── models/
-│ ├── main.py
-│ ├── database.py
-│ └── redis_client.py
-│
-├── tests/
-│ └── integration/
-│
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-├── pytest.ini
-└── README.md
-
-
----
 
 ## 🐳 Run with Docker (Recommended)
 
@@ -168,3 +146,4 @@ Production-ready coding practices
 
 👩‍💻 Author
 Anusha Pavani Venneti
+
