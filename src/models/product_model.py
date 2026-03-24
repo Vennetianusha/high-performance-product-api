@@ -1,6 +1,7 @@
 import uuid
+from typing import Optional
 from sqlalchemy import Column, String, Float, Integer
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from src.database import Base
 
 
@@ -21,6 +22,7 @@ class Product(Base):
 # Pydantic Schemas
 # -----------------------
 
+# CREATE
 class ProductCreate(BaseModel):
     name: str
     description: str
@@ -28,6 +30,15 @@ class ProductCreate(BaseModel):
     stock_quantity: int
 
 
+# UPDATE (🔥 important for partial update)
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    stock_quantity: Optional[int] = None
+
+
+# RESPONSE
 class ProductResponse(BaseModel):
     id: str
     name: str
@@ -35,5 +46,4 @@ class ProductResponse(BaseModel):
     price: float
     stock_quantity: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

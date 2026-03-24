@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.database import get_db
-from src.models.product_model import ProductCreate, ProductResponse
+from src.models.product_model import (
+    ProductCreate,
+    ProductUpdate,
+    ProductResponse
+)
 from src.services.product_service import (
     create_product,
     get_product_by_id,
@@ -32,7 +36,6 @@ def create_new_product(
 ):
     created_product = create_product(db, product)
 
-    # Optional: cache immediately
     product_response = ProductResponse.model_validate(created_product)
     set_product_in_cache(product_response)
 
@@ -47,7 +50,7 @@ def get_product(
     product_id: str,
     db: Session = Depends(get_db)
 ):
-    # 1️⃣ Check Redis first
+    # 1️⃣ Check cache
     cached_product = get_product_from_cache(product_id)
     if cached_product:
         print("⚡ Cache HIT")
@@ -55,13 +58,13 @@ def get_product(
 
     print("❌ Cache MISS - Fetching from DB")
 
-    # 2️⃣ Fetch from DB
+    # 2️⃣ DB fetch
     product = get_product_by_id(db, product_id)
 
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # 3️⃣ Store in Redis
+    # 3️⃣ Store in cache
     product_response = ProductResponse.model_validate(product)
     set_product_in_cache(product_response)
 
@@ -69,12 +72,12 @@ def get_product(
 
 
 # -----------------------------
-# UPDATE PRODUCT
+# UPDATE PRODUCT (🔥 FIXED)
 # -----------------------------
 @router.put("/{product_id}", response_model=ProductResponse)
 def update_existing_product(
     product_id: str,
-    product: ProductCreate,
+    product: ProductUpdate,
     db: Session = Depends(get_db)
 ):
     updated_product = update_product(db, product_id, product)
@@ -82,7 +85,7 @@ def update_existing_product(
     if not updated_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # 🔥 Invalidate cache after update
+    # 🔥 invalidate cache
     invalidate_product_cache(product_id)
 
     return ProductResponse.model_validate(updated_product)
@@ -101,7 +104,7 @@ def delete_existing_product(
     if not deleted_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # 🔥 Invalidate cache after delete
+    # 🔥 invalidate cache
     invalidate_product_cache(product_id)
 
     return

@@ -1,7 +1,10 @@
 from sqlalchemy.orm import Session
-from src.models.product_model import Product, ProductCreate
+from src.models.product_model import Product, ProductCreate, ProductUpdate
 
 
+# -----------------------------
+# CREATE
+# -----------------------------
 def create_product(db: Session, product_data: ProductCreate):
     new_product = Product(
         name=product_data.name,
@@ -17,20 +20,27 @@ def create_product(db: Session, product_data: ProductCreate):
     return new_product
 
 
+# -----------------------------
+# GET
+# -----------------------------
 def get_product_by_id(db: Session, product_id: str):
     return db.query(Product).filter(Product.id == product_id).first()
 
 
-def update_product(db: Session, product_id: str, update_data: ProductCreate):
+# -----------------------------
+# UPDATE (🔥 FIXED)
+# -----------------------------
+def update_product(db: Session, product_id: str, product_update: ProductUpdate):
     product = get_product_by_id(db, product_id)
 
     if not product:
         return None
 
-    product.name = update_data.name
-    product.description = update_data.description
-    product.price = update_data.price
-    product.stock_quantity = update_data.stock_quantity
+    # ✅ only update provided fields (VERY IMPORTANT)
+    update_data = product_update.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(product, key, value)
 
     db.commit()
     db.refresh(product)
@@ -38,6 +48,9 @@ def update_product(db: Session, product_id: str, update_data: ProductCreate):
     return product
 
 
+# -----------------------------
+# DELETE
+# -----------------------------
 def delete_product(db: Session, product_id: str):
     product = get_product_by_id(db, product_id)
 
